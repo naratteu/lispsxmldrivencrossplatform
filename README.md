@@ -11,6 +11,8 @@ UI 를 자체 스키마의 XML 로 적고, Lisp 가 그것을 SXML 로 읽어 �
 
 Lisp 는 [dotcl](https://github.com/dotcl/dotcl)(.NET 위의 Common Lisp)이라 .NET 밖의 도구가 필요 없다.
 
+왜 하는지, 지나온 길, 남은 일은 [연구 노트](NOTES.md)에 있다.
+
 ## 흐름
 
 ```
