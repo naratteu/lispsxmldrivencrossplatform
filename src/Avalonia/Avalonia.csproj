@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 데스크톱 앱(Avalonia) — 부품은 ui.xml 에서 생성된다(build/Ui.targets) -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Demo</AssemblyName>
+    <RootNamespace>Demo</RootNamespace>
+    <UiTarget>avalonia</UiTarget>
+  </PropertyGroup>
+  <Import Project="../../build/Ui.targets" />
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Android 앱 — 부품은 ui.xml 에서 생성된다(build/Ui.targets) -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Demo</RootNamespace>
+    <ApplicationId>com.example.lispsxmldrivencrossplatform</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
+    <UiTarget>android</UiTarget>
+  </PropertyGroup>
+  <Import Project="../../build/Ui.targets" />
+</Project>

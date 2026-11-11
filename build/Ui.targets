@@ -1,0 +1,18 @@
+<Project>
+  <!-- 앱 프로젝트가 가져다 쓴다: 컴파일 전에 ui.xml → obj/gen/Ui.g.cs (guile 이 PATH 에 있어야 한다).
+       생성물은 저장소에 두지 않는다. 앱은 UiTarget 에 avalonia 나 android 를 적는다 -->
+  <PropertyGroup>
+    <UiSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../ui.xml'))</UiSpec>
+    <UiGen>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../gen'))</UiGen>
+    <UiOut>$(MSBuildProjectDirectory)/obj/gen/Ui.g.cs</UiOut>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(UiOut)" />
+    <UiGenSource Include="$(UiGen)/*.scm" />
+  </ItemGroup>
+  <!-- 명세나 생성기가 바뀌었을 때만 다시 만든다 -->
+  <Target Name="UiGenerate" BeforeTargets="CoreCompile" Inputs="$(UiSpec);@(UiGenSource)" Outputs="$(UiOut)">
+    <MakeDir Directories="$(MSBuildProjectDirectory)/obj/gen" />
+    <Exec Command="guile --no-auto-compile -L &quot;$(UiGen)&quot; &quot;$(UiGen)/main.scm&quot; &quot;$(UiSpec)&quot; $(UiTarget) &quot;$(UiOut)&quot;" />
+  </Target>
+</Project>
