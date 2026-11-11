@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 소스 생성기 — 컴파일러(IDE 포함) 안에서 dotcl 로 gen/main.lisp 를 돌려, 찍혀 나온 C# 을 컴파일에 넣는다.
+       생성 자체는 전부 Lisp 가 한다. 여기는 프로세스를 띄우고 오류를 명세의 줄에 붙여 주는 껍데기다 -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <!-- 배포하는 분석기가 아니라 릴리스 추적 표는 두지 않는다 -->
+    <NoWarn>$(NoWarn);RS2008</NoWarn>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

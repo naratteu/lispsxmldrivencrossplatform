@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- UI 명세 — 색과 부품. 여기서 플랫폼별 네이티브 UI 코드가 생성된다(gen/).
+<!-- UI 명세 — 색과 부품. 여기서 플랫폼별 네이티브 UI 코드와 프리뷰가 생성된다(gen/).
      요소는 row · box · dot · label 넷뿐이고, 값은 아래 셋 중 하나다.
        이름              선언한 prop 이나 color
        글자 그대로        숫자, #RRGGBB(#AARRGGBB), true/false, '따옴표 글자'
-       조건 ? 값 : 값     조건은 flag prop -->
+       조건 ? 값 : 값     조건은 flag prop
+     example 은 prop 값을 채운 보기다 — 프리뷰와, 플랫폼끼리 견주어 보는 보기 모음(Examples)에 나온다 -->
 <ui>
   <color name="bar" value="#24527A"/>
   <color name="bar-deep" value="#1B3F5E"/>
@@ -19,8 +20,9 @@
   <color name="orange" value="#E08A1E"/>
   <color name="violet" value="#7A5AF8"/>
 
-  <component name="home-mark" doc="앱 표시 — 누르면 홈">
+  <component name="home-mark" doc="앱 표시 — 누르면 홈" backdrop="bar">
     <event name="clicked"/>
+    <example/>
     <box padding="10" tap="clicked">
       <box padding="5" radius="5" fill="on-bar">
         <box padding="5" radius="2" fill="bar"/>
@@ -28,12 +30,14 @@
     </box>
   </component>
 
-  <component name="tab-header" doc="탭 — 보고 있는 탭만 바탕이 있고 ✕ 로 닫는다">
+  <component name="tab-header" doc="탭 — 보고 있는 탭만 바탕이 있고 ✕ 로 닫는다" backdrop="bar">
     <prop name="title" type="text"/>
     <prop name="accent" type="color"/>
     <prop name="active" type="flag"/>
     <event name="clicked"/>
     <event name="close-clicked"/>
+    <example title="'작업'" accent="blue" active="true"/>
+    <example title="'재고'" accent="green" active="false"/>
     <box padding="14 6 8 6" radius="8" fill="active ? page : #00000000" tap="clicked">
       <row spacing="8">
         <dot size="8" fill="active ? accent : on-bar-dim"/>
@@ -43,18 +47,22 @@
     </box>
   </component>
 
-  <component name="bar-button" doc="바의 기호 버튼(+ ↻) — 꺼지면 흐리게">
+  <component name="bar-button" doc="바의 기호 버튼(+ ↻) — 꺼지면 흐리게" backdrop="bar">
     <prop name="glyph" type="text"/>
     <prop name="on" type="flag"/>
     <event name="clicked"/>
+    <example glyph="'+'" on="true"/>
+    <example glyph="'↻'" on="false"/>
     <box padding="8 4">
       <label text="glyph" size="20" color="on ? on-bar : on-bar-faint" tap="clicked"/>
     </box>
   </component>
 
-  <component name="status-chip" doc="상태 표시 — 점과 글자">
+  <component name="status-chip" doc="상태 표시 — 점과 글자" backdrop="bar">
     <prop name="text" type="text"/>
     <prop name="on" type="flag"/>
+    <example text="'연결됨'" on="true"/>
+    <example text="'대기'" on="false"/>
     <box padding="10 4" radius="13" fill="bar-deep">
       <row spacing="6">
         <dot size="8" fill="on ? live : on-bar-dim"/>

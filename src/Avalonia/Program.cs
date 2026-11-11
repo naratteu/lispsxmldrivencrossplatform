@@ -74,6 +74,38 @@ sealed class MainWindow : Window
     }
 }
 
+/// 명세의 example 을 위에서 아래로 늘어놓는다 — 프리뷰(#plain) · Android 의 같은 화면과 견주어 본다.
+/// 보기마다 잰 크기를 찍고, 그림 파일 이름을 주면 창을 그림으로 남기고 끝낸다
+sealed class GalleryWindow : Window
+{
+    public GalleryWindow(string? picture)
+    {
+        Title = "gallery";
+        Width = 700;
+        SizeToContent = SizeToContent.Height;
+        Background = new SolidColorBrush(Tokens.Page);
+        var examples = Examples.All().ToList();
+        var cells = new StackPanel();
+        foreach (var (_, backdrop, view) in examples)
+        {
+            view.HorizontalAlignment = HorizontalAlignment.Left;
+            cells.Children.Add(new Border { Background = new SolidColorBrush(backdrop), Padding = new Thickness(12), Child = view });
+        }
+        Content = cells;
+        Opened += async (_, _) =>
+        {
+            await Task.Delay(500);
+            foreach (var (name, _, view) in examples)
+                Console.WriteLine($"{name} {view.Bounds.Width:0.#} {view.Bounds.Height:0.#}");
+            if (picture is null) return;
+            var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(700, (int)Bounds.Height));
+            bitmap.Render(this);
+            bitmap.Save(picture, new Avalonia.Media.Imaging.PngBitmapEncoderOptions());
+            Close();
+        };
+    }
+}
+
 sealed class App : Application
 {
     public override void Initialize() => Styles.Add(new FluentTheme());
@@ -81,7 +113,9 @@ sealed class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            desktop.MainWindow = new MainWindow();
+            desktop.MainWindow = desktop.Args is ["--gallery", .. var rest]
+                ? new GalleryWindow(rest.FirstOrDefault())
+                : new MainWindow();
         base.OnFrameworkInitializationCompleted();
     }
 }

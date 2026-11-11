@@ -24,6 +24,11 @@ public sealed class MainActivity : Activity
     {
         base.OnCreate(saved);
         var dp = Resources!.DisplayMetrics!.Density;
+        if (Intent?.GetBooleanExtra("gallery", false) == true)
+        {
+            ShowGallery(dp);
+            return;
+        }
 
         var home = new HomeMark(this) { Clicked = () => Show(null) };
         _tabs = new LinearLayout(this) { Orientation = Orientation.Horizontal };
@@ -54,6 +59,30 @@ public sealed class MainActivity : Activity
         root.AddView(_page, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 0, 1f));
         SetContentView(root);
         Show(_active);
+    }
+
+    /// 명세의 example 을 위에서 아래로 늘어놓는다 — 프리뷰(#plain) · Avalonia 의 같은 화면과 견주어 본다.
+    /// adb shell am start 에 --ez gallery true 를 붙여 띄운다. 잰 크기는 logcat(gallery)에 찍는다
+    void ShowGallery(float dp)
+    {
+        var examples = Examples.All(this).ToList();
+        var cells = new LinearLayout(this) { Orientation = Orientation.Vertical };
+        cells.SetFitsSystemWindows(true);
+        cells.SetBackgroundColor(Tokens.Page);
+        foreach (var (_, backdrop, view) in examples)
+        {
+            var cell = new FrameLayout(this);
+            cell.SetBackgroundColor(backdrop);
+            cell.SetPadding((int)(12 * dp), (int)(12 * dp), (int)(12 * dp), (int)(12 * dp));
+            cell.AddView(view, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent));
+            cells.AddView(cell);
+        }
+        SetContentView(cells);
+        cells.Post(() =>
+        {
+            foreach (var (name, _, view) in examples)
+                Log.Info("gallery", $"{name} {view.Width / dp:0.#} {view.Height / dp:0.#}");
+        });
     }
 
     void Show(int? item)

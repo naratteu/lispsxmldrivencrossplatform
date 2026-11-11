@@ -1,0 +1,112 @@
+;;; 플랫폼 중립 프리뷰 — 명세의 example 마다 HTML 로 그린다. 배치 · 글자 재기는 브라우저가 한다.
+;;; 코드 생성기와 달리 값이 다 정해져 있어서(보기의 값), 조건을 미리 풀어 한 가지 모양만 찍는다.
+(in-package :ui-gen)
+
+(defvar *colors* '() "((이름 a r g b) ...) — 색 이름을 풀 때 본다")
+
+(defun resolve (value bindings)
+  "prop · 색 이름 · 조건을 풀어 글자 그대로의 값으로. bindings 는 보기의 ((prop 값) ...)"
+  (ecase (first value)
+    ((num text flag color) value)
+    (token `(color ,@(rest (assoc (second value) *colors*))))
+    (prop (resolve (second (assoc (second value) bindings)) bindings))
+    (if (destructuring-bind (condition a b) (rest value)
+          (resolve (if (second (resolve `(prop ,condition) bindings)) a b) bindings)))))
+
+(defun css-color (color)
+  (destructuring-bind (a r g b) (rest color)
+    (format nil "rgba(~a, ~a, ~a, ~,3f)" r g b (/ a 255.0))))
+
+(defun html-escape (string)
+  (with-output-to-string (out)
+    (loop for c across string
+          do (case c
+               (#\< (write-string "&lt;" out))
+               (#\> (write-string "&gt;" out))
+               (#\& (write-string "&amp;" out))
+               (#\" (write-string "&quot;" out))
+               (t (write-char c out))))))
+
+(defun print-html-node (node bindings component depth)
+  (flet ((a (name) (second (resolve (attr node name) bindings)))
+         (color (name) (css-color (resolve (attr node name) bindings))))
+    (let* ((pad (indent depth))
+           (style
+             (append
+              (ecase (tag node)
+                (row (list "display:flex" "align-items:center" (format nil "gap:~apx" (a 'spacing))))
+                (box (destructuring-bind (l top r b) (rest (attr node 'padding))
+                       (list "display:flex" "align-items:center" "justify-content:center"
+                             (format nil "padding:~apx ~apx ~apx ~apx" top r b l)
+                             (format nil "border-radius:~apx" (a 'radius))
+                             (format nil "background:~a" (color 'fill)))))
+                (dot (list (format nil "width:~apx" (a 'size)) (format nil "height:~apx" (a 'size))
+                           "border-radius:50%" "flex:none"
+                           (format nil "background:~a" (color 'fill))))
+                (label (list (format nil "font-size:~apx" (a 'size))
+                             (format nil "line-height:~apx" (line-height node))
+                             (format nil "font-weight:~a" (if (a 'bold) 700 400))
+                             (format nil "color:~a" (color 'color))
+                             "white-space:nowrap")))
+              (unless (a 'visible) (list "display:none"))
+              (when (attr node 'tap) (list "cursor:pointer"))))
+           ;; 누르면 어떤 event 가 나는지 화면 아래에 보여 준다
+           (tap (if (attr node 'tap)
+                    (format nil " onclick=\"tap(event, '~(~a · ~a~)')\"" (component-name component) (attr node 'tap))
+                    "")))
+      (format t "~a<div style=\"~a\"~a>" pad (join style ";") tap)
+      (cond
+        ((eq (tag node) 'label) (format t "~a</div>~%" (html-escape (a 'text))))
+        ((null (children node)) (format t "</div>~%"))
+        (t (terpri)
+           (dolist (kid (children node))
+             (print-html-node kid bindings component (+ depth 1)))
+           (format t "~a</div>~%" pad))))))
+
+(defun example-caption (example)
+  (join (loop for (name value) in (rest example)
+              collect (format nil "~(~a~)=~a" name
+                              (ecase (first value)
+                                (text (second value))
+                                (flag (if (second value) "true" "false"))
+                                (token (string-downcase (symbol-name (second value))))
+                                (color "색"))))
+        " · "))
+
+(defun print-html (spec &key live)
+  "live 면 명세가 바뀔 때 스스로 다시 읽는다(프리뷰 서버용)"
+  (let ((*colors* (spec-colors spec)))
+    (line "<!doctype html>")
+    (line "<meta charset=\"utf-8\">")
+    (line "<title>ui.xml 프리뷰</title>")
+    (line "<style>")
+    (line "  body { margin: 0; font: 14px system-ui, sans-serif; background: #fdfdfb; color: #1a1a1a; }")
+    (line "  h2 { font-size: 14px; margin: 20px 12px 2px; }")
+    (line "  .doc, .caption { color: #6b7280; font-size: 12px; margin: 0 12px 6px; }")
+    (line "  .caption { margin: 8px 12px 2px; }")
+    (line "  .cell { display: flex; padding: 12px; }")
+    (line "  #tapped { position: fixed; right: 12px; bottom: 12px; padding: 6px 10px; border-radius: 6px; background: #1a1a1a; color: #fff; font-size: 12px; }")
+    (line "  .plain h2, .plain .doc, .plain .caption, .plain #tapped { display: none; }")
+    (line "</style>")
+    (dolist (component (spec-components spec))
+      (line "<h2>~(~a~)</h2>" (component-name component))
+      (line "<p class=\"doc\">~a</p>" (html-escape (component-doc component)))
+      (dolist (example (component-examples component))
+        (line "<p class=\"caption\">~a</p>" (html-escape (example-caption example)))
+        (line "<div class=\"cell\" style=\"background:~a\">" (css-color (resolve (component-backdrop component) '())))
+        (print-html-node (component-root component) (rest example) component 1)
+        (line "</div>")))
+    (line "<div id=\"tapped\">눌러 보면 나는 event 가 여기 나온다</div>")
+    (line "<script>")
+    (line "  // #plain 을 붙이면 보기만 남긴다 — 플랫폼의 보기 모음 화면과 견주어 볼 때")
+    (line "  if (location.hash === '#plain') document.body.classList.add('plain');")
+    (line "  function tap(e, name) { e.stopPropagation(); document.getElementById('tapped').textContent = name; }")
+    (when live
+      (line "  // 명세나 생성기가 바뀌면 다시 읽는다")
+      (line "  let seen = null;")
+      (line "  setInterval(async () => {")
+      (line "    const v = await (await fetch('/version')).text();")
+      (line "    if (seen !== null && v !== seen) location.reload();")
+      (line "    seen = v;")
+      (line "  }, 300);"))
+    (line "</script>")))
